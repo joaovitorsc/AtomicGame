@@ -1,0 +1,18 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class PlaceAtomo : MonoBehaviour
+{
+   
+   public bool isValid;
+
+   void Start()
+   {
+      if (!isValid)
+      {
+         FindObjectOfType<AudioManager>().Play("Correct");
+      } 
+   }
+
+}
