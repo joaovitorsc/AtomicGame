@@ -40,7 +40,7 @@ public class AudioManager : MonoBehaviour
 
     void Start()
     {
-        Play("BackgroundMusic");
+        Play("BackGroundMusic");
     }
 
     public void Play(string soundName)
