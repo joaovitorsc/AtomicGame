@@ -4,44 +4,40 @@ using UnityEngine;
 
 public class HUD : MonoBehaviour
 {
-    public bool Active3D = false;
-    public Transform SpanwElements;
-    private GameObject Elements;
+    [Header("Settings")]
+    public bool is3DActive = false;
+    
+    [Header("References")]
+    public Transform spawnPoint;
+    public GameObject button2D, button3D;
 
-    public GameObject btn_2D, btn_3D;
-
-    void Start()
+    private GameObject moleculeContainer;
+    private CheckState stateChecker;
+    void Awake()
     {
-        Elements = GameObject.FindGameObjectWithTag("Molecula");
-        
+        stateChecker = GetComponent<CheckState>();
+        moleculeContainer = GameObject.FindGameObjectWithTag("Molecule");
     }
-    public void InstanceElement(GameObject prefab)
+    public void SpawnElement(GameObject prefab)
     {
        GameObject Atomo = Instantiate(prefab, new Vector3(0,0,0),transform.rotation); 
-       Atomo.transform.parent = Elements.transform;
-       Atomo.transform.position = SpanwElements.position;      
+       Atomo.transform.parent = moleculeContainer.transform;
+       Atomo.transform.position = spawnPoint.position;      
     }
-    public void Molecule3D(GameObject Model) 
+    public void Toggle3DMode(GameObject model3D)
     {
-        if (!Active3D && GetComponent<ChecarEstado>().completou)
-        {
-            Model.SetActive(true);
-            Elements.SetActive(false);
-            Active3D = true;
-            btn_2D.SetActive(true);
-            btn_3D.SetActive(false);
-        }        
-        else if (Active3D && GetComponent<ChecarEstado>().completou)
-        {
-            Model.SetActive(false);
-            Elements.SetActive(true);
-            Active3D = false;
-            btn_2D.SetActive(false);
-            btn_3D.SetActive(true);
-        }
+        if (stateChecker == null || !stateChecker.isCompleted) return;
+
+        is3DActive = !is3DActive;
+
+        model3D.SetActive(is3DActive);
+        moleculeContainer.SetActive(!is3DActive);
+
+        button2D.SetActive(is3DActive);
+        button3D.SetActive(!is3DActive);
     }
-    public void DisableObject(GameObject molde)
+    public void DisableObject(GameObject target)
     {
-        molde.SetActive(false);
+        target.SetActive(false);
     }
 }
