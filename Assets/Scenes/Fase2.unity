@@ -7313,6 +7313,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7382070537837868459, guid: af0b8205e408a624e94ad5818eac7b9f, type: 3}
+      propertyPath: sounds.Array.data[1].name
+      value: BackGroundMusic
+      objectReference: {fileID: 0}
     - target: {fileID: 8976174866562672257, guid: af0b8205e408a624e94ad5818eac7b9f, type: 3}
       propertyPath: m_Name
       value: AudioManager
