@@ -1,8 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class PlaceOxygen : MonoBehaviour
+public class PlaceAtom : MonoBehaviour
 {
     [SerializeField] private bool _isValid = true;
 

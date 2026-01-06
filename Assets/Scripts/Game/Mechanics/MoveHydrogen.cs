@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
-public class MoveLink : MonoBehaviour
+public class MoveHydrogen : MonoBehaviour
 {
     [Header("Movement Settings")]
     [Range(1, 15)] public float moveSpeed = 10f;
@@ -10,20 +10,19 @@ public class MoveLink : MonoBehaviour
     [Header("Status")]
     public bool isConnected;
 
-    private Rigidbody rb3D;
-    private Camera mainCamera;
     private Vector3 startOffset;
+    private Rigidbody rb3D;
     private bool isHolding;
     private GameObject[] connectionPoints;
-    private PlaceLink currentOccupiedPoint;
-    private Quaternion originalRotation;
+    private Camera mainCamera;
+
+    private PlaceAtom currentOccupiedPoint;
 
     void Start()
     {
         rb3D = GetComponent<Rigidbody>();
         mainCamera = Camera.main;
-        originalRotation = transform.rotation;
-        connectionPoints = GameObject.FindGameObjectsWithTag("ConnectLink");
+        connectionPoints = GameObject.FindGameObjectsWithTag("ConnectHidrogen");
     }
 
     void OnMouseDown()
@@ -31,16 +30,17 @@ public class MoveLink : MonoBehaviour
         startOffset = transform.position - GetMouseWorldPosition();
         isHolding = true;
 
-        if (isConnected)
+        if (isConnected && currentOccupiedPoint != null)
         {
-            Disconnect();
+            DisconnectFromPoint();
         }
     }
 
     void OnMouseDrag()
     {
-        Vector3 targetPos = startOffset + GetMouseWorldPosition();
-        rb3D.velocity = (targetPos - transform.position) * moveSpeed;
+        Vector3 targetPosition = startOffset + GetMouseWorldPosition();
+        Vector3 direction = targetPosition - transform.position;
+        rb3D.velocity = direction * moveSpeed;
     }
 
     void OnMouseUp()
@@ -61,9 +61,9 @@ public class MoveLink : MonoBehaviour
     {
         foreach (GameObject point in connectionPoints)
         {
-            PlaceLink linkPoint = point.GetComponent<PlaceLink>();
+            PlaceAtom atomPoint = point.GetComponent<PlaceAtom>();
 
-            if (!linkPoint.isValid) continue;
+            if (!atomPoint.isValid) continue;
 
             float distance = Vector3.Distance(transform.position, point.transform.position);
 
@@ -75,26 +75,22 @@ public class MoveLink : MonoBehaviour
 
             if (distance < 0.01f)
             {
-                Connect(linkPoint);
+                ConnectToPoint(atomPoint);
                 break;
             }
         }
     }
 
-    private void Connect(PlaceLink linkPoint)
+    private void ConnectToPoint(PlaceAtom atomPoint)
     {
         isConnected = true;
-        currentOccupiedPoint = linkPoint;
-        transform.position = linkPoint.transform.position;
+        currentOccupiedPoint = atomPoint;
+        transform.position = atomPoint.transform.position;
 
-        if (linkPoint.isHorizontal) transform.Rotate(0, 0, 90);
-        else if (linkPoint.isDiagonalRight) transform.Rotate(0, 0, -60);
-        else if (linkPoint.isDiagonalLeft) transform.Rotate(0, 0, 60);
-
-        linkPoint.isValid = false;
+        atomPoint.isValid = false;
     }
 
-    private void Disconnect()
+    private void DisconnectFromPoint()
     {
         isConnected = false;
 
@@ -103,8 +99,6 @@ public class MoveLink : MonoBehaviour
             currentOccupiedPoint.isValid = true;
             currentOccupiedPoint = null;
         }
-
-        transform.rotation = originalRotation;
     }
 
     private Vector3 GetMouseWorldPosition()

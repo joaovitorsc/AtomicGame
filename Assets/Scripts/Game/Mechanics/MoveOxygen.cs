@@ -1,85 +1,108 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody))]
 public class MoveOxygen : MonoBehaviour
 {
-   Vector3 Pos_Start, Pos_Destiny, Vector_Direction;
-    Rigidbody _rigidbody3D;
-    bool isHolding;
-    float distance;
-    PlaceOxygen Pa;
-    public bool ValidPlace ;
-   
+    [Header("Movement Settings")]
+    [Range(1, 15)] public float moveSpeed = 10f;
+    [Range(0.1f, 2.0f)] public float minConnectDistance = 0.5f;
+
+    [Header("Status")]
     public bool isConnected;
-    [Range(1,15)]
-    public float Speed_Move;
-    [Space (10)]
-    public GameObject[] Connects;
-    [Range(0.1f, 2.0f)]
-    public float DistanceMinConnect;
-    [HideInInspector]
-    public bool allAreTrue = false;
+
+    private Rigidbody rb3D;
+    private Camera mainCamera;
+    private Vector3 startOffset;
+    private bool isHolding;
+    private GameObject[] connectionPoints;
+    private PlaceAtom currentOccupiedPoint;
+
     void Start()
     {
-        
-        ValidPlace = false;
-        Connects = GameObject.FindGameObjectsWithTag("ConnectOxygen");
-        _rigidbody3D = transform.GetComponent<Rigidbody>();
+        rb3D = GetComponent<Rigidbody>();
+        mainCamera = Camera.main;
+
+        connectionPoints = GameObject.FindGameObjectsWithTag("ConnectOxygen");
     }
 
     void OnMouseDown()
     {
-        Pos_Start = transform.position - Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        startOffset = transform.position - GetMouseWorldPosition();
         isHolding = true;
-        isConnected = false;
-        Debug.Log("CLICANDO");
 
+        if (isConnected)
+        {
+            Disconnect();
+        }
     }
-    private void OnMouseDrag() 
-    {
-        Pos_Destiny = Pos_Start +  Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        Vector_Direction = Pos_Destiny - transform.position;
-        _rigidbody3D.velocity = Vector_Direction * Speed_Move;
 
-    }
-    private void OnMouseUp() 
+    private void OnMouseDrag()
     {
-       isHolding = false; 
-       _rigidbody3D.velocity = new Vector3(0,0,0);
+        Vector3 targetPos = startOffset + GetMouseWorldPosition();
+        Vector3 direction = targetPos - transform.position;
+        rb3D.velocity = direction * moveSpeed;
     }
-    
-    void FixedUpdate() 
+
+    private void OnMouseUp()
     {
-            if (!isHolding && !isConnected)
+        isHolding = false;
+        rb3D.velocity = Vector3.zero;
+    }
+
+    void FixedUpdate()
+    {
+        if (!isHolding && !isConnected)
+        {
+            HandleSnapping();
+        }
+    }
+
+    private void HandleSnapping()
+    {
+        foreach (GameObject point in connectionPoints)
+        {
+            PlaceAtom oxygenPoint = point.GetComponent<PlaceAtom>();
+
+            if (!oxygenPoint.isValid) continue;
+
+            float distance = Vector3.Distance(transform.position, point.transform.position);
+
+            if (distance < minConnectDistance)
             {
-                foreach (GameObject Connect in Connects)
-                {
-                     Pa= Connect.GetComponent<PlaceOxygen>();
-                     distance = Vector3.Distance(transform.position, Connect.transform.position);
-                    
-                    if (distance < DistanceMinConnect && Pa.isValid)
-                    {
-                        _rigidbody3D.velocity = Vector3.zero;
-                        transform.position = Vector3.MoveTowards(transform.position, Connect.transform.position, 0.02f);   
-                    }
-
-                    if (distance <0.01f)
-                    {
-                        FindObjectOfType<AudioManager>().Play("Correct");
-                        Pa.isValid = false;
-                        Debug.Log("A BRBA");
-                        isConnected = true;
-                        transform.position = Connect.transform.position;
-                        this.ValidPlace = true;
-                    } 
-                    if (!isConnected && !Pa.isValid && distance < DistanceMinConnect && ValidPlace)
-                   {
-                       Pa.isValid = true;
-                       
-                   } 
-                }
+                rb3D.velocity = Vector3.zero;
+                transform.position = Vector3.MoveTowards(transform.position, point.transform.position, 0.05f);
             }
+
+            if (distance < 0.01f)
+            {
+                Connect(oxygenPoint);
+                break;
+            }
+        }
+    }
+
+    private void Connect(PlaceAtom oxygenPoint)
+    {
+        isConnected = true;
+        currentOccupiedPoint = oxygenPoint;
+        transform.position = oxygenPoint.transform.position;
+
+        oxygenPoint.isValid = false;
+    }
+
+    private void Disconnect()
+    {
+        isConnected = false;
+
+        if (currentOccupiedPoint != null)
+        {
+            currentOccupiedPoint.isValid = true;
+            currentOccupiedPoint = null;
+        }
+    }
+
+    private Vector3 GetMouseWorldPosition()
+    {
+        return mainCamera.ScreenToWorldPoint(Input.mousePosition);
     }
 }
-
